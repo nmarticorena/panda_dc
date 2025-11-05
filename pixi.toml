@@ -1,0 +1,31 @@
+[workspace]
+authors = ["krishan rana"]
+channels = ["conda-forge"]
+name = "panda_dc"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python="3.11.*"
+reactivex = ">=4.0.4,<5"
+numpy = ">=2"
+scikit-build-core = ">=0.11.6,<0.12"
+cmake = ">=4.1.2,<5"
+hatchling = ">=1.27.0,<2"
+matplotlib = ">=3.10.7,<4"
+pip = ">=25.2,<26"
+tyro = ">=0.9.35,<0.10"
+rerun-sdk = ">=0.26.2,<0.27"
+
+[pypi-options]
+no-build-isolation = ["swift-sim", "roboticstoolbox-python", "spatialgeometry", "spatialmath-python"]
+
+[pypi-dependencies]
+panda_dc = {path = ".", editable = true}
+swift-sim = {git = "https://github.com/nmarticorena/swift.git"}
+roboticstoolbox-python = {git = "https://github.com/nmarticorena/robotics-toolbox-python.git"}
+spatialgeometry = {git = "https://github.com/nmarticorena/spatialgeometry.git"}
+spatialmath-python = {git = "https://github.com/nmarticorena/spatialmath-python.git"}
+dynamixel-sdk = ">=3.8.4, <4"

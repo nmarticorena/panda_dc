@@ -1,0 +1,8 @@
+[project]
+name = "panda_dc"
+version = "0.1.0"
+description = "QCR Panda Dataset Collection"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
