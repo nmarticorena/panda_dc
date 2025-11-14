@@ -1,3 +1,5 @@
+import os
+
 import panda_py
 import panda_py.motion
 from panda_dc.src.dynamixel.robot import DynamixelRobot
@@ -6,10 +8,11 @@ from panda_py import controllers
 import reactivex as rx
 from reactivex import operators as ops
 from scipy.spatial.transform.rotation import Rotation as R
+from panda_dc.src.teleoperation.gui import SwiftGui
 
 
 class Teleop:
-	def __init__(self, hostname: str = "172.16.0.2", has_gripper: bool = True):
+	def __init__(self, hostname: str = "172.16.0.2", has_gripper: bool = True, gui: bool = True):
 		self.panda = panda_py.Panda(hostname)
 		if has_gripper:
 			self.gripper = panda_py.libfranka.Gripper(hostname)
@@ -20,6 +23,10 @@ class Teleop:
 		self.stop_requested = False
 		self._callback = None
 		self.create_gello_streams()
+		if gui:
+			self.gui = SwiftGui()
+		else:
+			self.gui = None # Replace with dummy api
 	
 	def set_callback(self, callback):
 		self._callback = callback
@@ -35,6 +42,8 @@ class Teleop:
 	def take_control(self):
 		assert self.stop_requested == False
 		if not self.can_control():
+			while not self.can_control():
+				self.gui.step(self.panda.q.tolist(), self.gello.get_joint_state()[:7])
 			raise Exception("Gello and Panda are not in the same configuration")
 		self.panda.move_to_joint_position(self.gello.get_joint_state()[:7])
 		impedance = [400.0, 400.0, 400.0, 40.0, 40.0, 40.0]
@@ -63,9 +72,11 @@ class Teleop:
 					x= {
 					"robot_q": self.panda.q.tolist(),
 		 			"robot_X_BE": self.panda.get_pose().tolist(),
-					"gello_q": gello_q
+					"gello_q": gello_q,
+					"gripper_width" : self.gripper.read_once().width,
 					}
 					self._callback(x)
+					self.gui.step(self.panda.q.tolist(), gello_q[:7])
 
 		self.stop_requested = False
 		print("--------RELINQUISHED CONTROL-------")
@@ -100,11 +111,11 @@ class Teleop:
 
 def create_gello() -> DynamixelRobot:
 	return DynamixelRobot(
-				port="/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT89FAFX-if00-port0",
+				port=f"/dev/serial/by-id/{os.environ['SERIAL_NAME']}",
 				real=True,
 				joint_ids=(1, 2, 3, 4, 5, 6, 7),
 				joint_offsets=(
-					5 * np.pi / 2,
+					3 * np.pi / 2,
 					2 * np.pi / 2,
 					2 * np.pi / 2,
 					2 * np.pi / 2,
