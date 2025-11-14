@@ -5,6 +5,10 @@ name = "panda_dc"
 platforms = ["linux-64"]
 version = "0.1.0"
 
+
+[environments]
+dev = ["dev"]
+
 [tasks]
 
 [dependencies]
@@ -38,3 +42,9 @@ atomics = ">=1.0.3, <2"
 
 [activation.env]
 SERIAL_NAME = "usb-FTDI_USB__-__Serial_Converter_FTA7NLND-if00-port0"
+
+[feature.dev.dependencies]
+ruff = "*"
+
+[feature.dev.tasks]
+format = {cmd = "ruff format panda_dc/*"}
