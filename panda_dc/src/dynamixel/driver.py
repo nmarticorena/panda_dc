@@ -141,7 +141,6 @@ class DynamixelDriver(DynamixelDriverProtocol):
                 details = f"Not a single device conected"
             raise RuntimeError(details) from e
 
-
         if not self._portHandler.setBaudRate(baudrate):
             raise RuntimeError(f"Failed to change the baudrate, {baudrate}")
 

@@ -6,8 +6,10 @@ from .driver import (
     FakeDynamixelDriver,
 )
 
+
 class DynamixelRobot:
     """A class representing a UR robot."""
+
     def __init__(
         self,
         joint_ids: Sequence[int],
@@ -37,7 +39,6 @@ class DynamixelRobot:
         self._joint_ids = joint_ids
         self._driver: DynamixelDriverProtocol
 
-
         if joint_offsets is None:
             self._joint_offsets = np.zeros(len(joint_ids))
         else:
@@ -53,12 +54,11 @@ class DynamixelRobot:
             f"joint_offsets: {len(self._joint_offsets)}"
         )
         assert len(self._joint_ids) == len(self._joint_signs), (
-            f"joint_ids: {len(self._joint_ids)}, "
-            f"joint_signs: {len(self._joint_signs)}"
+            f"joint_ids: {len(self._joint_ids)}, joint_signs: {len(self._joint_signs)}"
         )
-        assert np.all(
-            np.abs(self._joint_signs) == 1
-        ), f"joint_signs: {self._joint_signs}"
+        assert np.all(np.abs(self._joint_signs) == 1), (
+            f"joint_signs: {self._joint_signs}"
+        )
 
         if real:
             self._driver = DynamixelDriver(joint_ids, port=port, baudrate=baudrate)
