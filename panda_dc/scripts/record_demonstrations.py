@@ -66,7 +66,7 @@ class DataRecorder:
             enable_depth=False,
         )
         self.cams.cameras['123622270136'].set_exposure(exposure=5000, gain=60)
-        self.cams.cameras['035122250692'].set_exposure(exposure=200, gain=10)
+        self.cams.cameras['035122250692'].set_exposure(exposure=100, gain=60)
         self.cams.start()
         time.sleep(2)
         self.setup_streams()
