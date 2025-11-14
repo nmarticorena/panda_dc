@@ -143,8 +143,6 @@ class DataRecorder:
         cv2.moveWindow(self.window_name, 400, 400)
         while True:
             self.update_window()
-            #if not self.record_data:
-                #self.marker_detector.estimate_pose()
             self.key = cv2.waitKey(10) & 0xFF
             if self.key == self.toggle_key:
                 self.toggle_record()
