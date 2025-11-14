@@ -39,13 +39,14 @@ class DataRecorder:
         self.gripper_action = 0.0
    
     def record_state(self, s):
-        gello_q, robot_q, robot_X_BE = s["gello_q"], s["robot_q"], s["robot_X_BE"]
+        gello_q, robot_q, robot_X_BE, gripper_width = s["gello_q"], s["robot_q"], s["robot_X_BE"], s["gripper_width"]
         self.cams.record_frame()
         state =  {
-            "X_BE": np.array(robot_X_BE).reshape(4,4).T.tolist(),
+            "X_BE": np.array(robot_X_BE).reshape(4,4).tolist(),
             "robot_q": np.array(robot_q).tolist(),
             "gello_q": np.array(gello_q[:7]).tolist(),
             "gripper_action": self.gripper_action,
+            "gripper_state": gripper_width
         }
         self.states.append(state)
 
