@@ -1,4 +1,7 @@
 import time
+import os
+import pathlib
+from serial import SerialException
 from threading import Event, Lock, Thread
 from typing import Protocol, Sequence
 
@@ -123,8 +126,21 @@ class DynamixelDriver(DynamixelDriverProtocol):
         )
 
         # Open the port and set the baudrate
-        if not self._portHandler.openPort():
-            raise RuntimeError("Failed to open the port")
+        try:
+            if not self._portHandler.openPort():
+                raise RuntimeError(f"Failed to open the port")
+        except SerialException as e:
+            serial_device_connected = os.path.exists("/dev/serial/by-id/")
+            if serial_device_connected:
+                available_ports = os.listdir("/dev/serial/by-id/")
+                details = (
+                    f"Failed to connect to port: {port}\n",
+                    f"List of available ids {available_ports}\n",
+                )
+            else:
+                details = f"Not a single device conected"
+            raise RuntimeError(details) from e
+
 
         if not self._portHandler.setBaudRate(baudrate):
             raise RuntimeError(f"Failed to change the baudrate, {baudrate}")
