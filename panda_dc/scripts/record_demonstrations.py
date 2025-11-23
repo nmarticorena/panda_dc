@@ -67,23 +67,23 @@ class DataRecorder:
         # setting up cameras for recording
         self.cams = MultiRealsense(
             record_fps=self.record_fps,
-            serial_numbers=["123622270136", "035122250692"],
+            serial_numbers=["123622270136", "035122250692", "035122250388"],
             resolution=(640, 480),
             depth_resolution=(640, 480),
             enable_depth=False,
         )
         self.cams.cameras["123622270136"].set_exposure(exposure=5000, gain=60)
         self.cams.cameras["035122250692"].set_exposure(exposure=100, gain=60)
+        self.cams.cameras["035122250388"].set_exposure(exposure=100, gain=60)
         self.cams.start()
-        time.sleep(2)
         self.setup_streams()
 
         # top camera for capturing single images
-        self.static_camera_pipeline = rs.pipeline()
-        config = rs.config()
-        config.enable_device("035122250388")
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-        self.static_camera_pipeline.start(config)
+        # self.static_camera_pipeline = rs.pipeline()
+        # config = rs.config()
+        # config.enable_device("035122250388")
+        # config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        # self.static_camera_pipeline.start(config)
 
     def grasp(self, x):
         print(x)
@@ -98,16 +98,11 @@ class DataRecorder:
         self.record_data = not self.record_data
         if self.record_data:
             # save a photo of the current state
-            static_rgb = self.static_camera_pipeline.wait_for_frames().get_color_frame()
-            color_image = np.asanyarray(static_rgb.get_data())
 
             self.demo_state_text = "Recording..."
             self.states = []
             path = Path(f"data/{self.params.name}/{self.idx}/video")
             path.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(
-                f"data/{self.params.name}/{self.idx}/static_rgb.jpg", color_image
-            )
             self.cams.start_recording(str(path))
             self.disposable = self.record_stream.subscribe(
                 lambda x: self.record_state(x)
@@ -192,7 +187,6 @@ class DataRecorder:
         self.t.relinquish()
         self.t.home_robot()
         cv2.destroyAllWindows()
-        self.static_camera_pipeline.stop()
 
     def run(self):
         try:
