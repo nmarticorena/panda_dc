@@ -1,4 +1,5 @@
 from panda_dc.src.realsense.multi_realsense import MultiRealsense
+from panda_dc.src.realsense.multi_camera_visualizer import MultiCameraVisualizer
 from panda_dc.src.teleoperation.teleop_cartesian_pandapy import Teleop
 import time
 import json
@@ -9,7 +10,6 @@ from dataclasses import dataclass
 import cv2
 from reactivex import operators as ops
 from reactivex.subject import Subject
-import pyrealsense2 as rs
 
 
 @dataclass
@@ -67,16 +67,19 @@ class DataRecorder:
         # setting up cameras for recording
         self.cams = MultiRealsense(
             record_fps=self.record_fps,
-            serial_numbers=["123622270136", "035122250692", "035122250388"],
+            serial_numbers=["123622270136", "035122250692"], #, "035122250388"],
             resolution=(640, 480),
             depth_resolution=(640, 480),
             enable_depth=False,
         )
         self.cams.cameras["123622270136"].set_exposure(exposure=5000, gain=60)
         self.cams.cameras["035122250692"].set_exposure(exposure=100, gain=60)
-        self.cams.cameras["035122250388"].set_exposure(exposure=100, gain=60)
+        # self.cams.cameras["035122250388"].set_exposure(exposure=100, gain=60)
         self.cams.start()
         self.setup_streams()
+
+        self.gui = MultiCameraVisualizer(self.cams, 2,2)
+        self.gui.start()
 
         # top camera for capturing single images
         # self.static_camera_pipeline = rs.pipeline()
@@ -101,7 +104,7 @@ class DataRecorder:
 
             self.demo_state_text = "Recording..."
             self.states = []
-            path = Path(f"data/{self.params.name}/{self.idx}/video")
+            path = Path(f"data/{self.params.name}/episodes/{self.idx}/video")
             path.mkdir(parents=True, exist_ok=True)
             self.cams.start_recording(str(path))
             self.disposable = self.record_stream.subscribe(
@@ -117,7 +120,7 @@ class DataRecorder:
 
                 if not discard:
                     with open(
-                        f"data/{self.params.name}/{self.idx}/state.json", "w"
+                        f"data/{self.params.name}/episodes/{self.idx}/state.json", "w"
                     ) as f:
                         json.dump(self.states, f, indent=4)
                     self.idx += 1
