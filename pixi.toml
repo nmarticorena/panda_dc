@@ -38,6 +38,7 @@ spatialgeometry = {git = "https://github.com/nmarticorena/spatialgeometry.git"}
 spatialmath-python = {git = "https://github.com/nmarticorena/spatialmath-python.git"}
 dynamixel-sdk = ">=3.8.4, <4"
 panda-python = ">=0.8.1, <0.9"
+panda-desk = {git = "https://github.com/nmarticorena/panda_desk.git"}
 atomics = ">=1.0.3, <2"
 
 [activation.env]
