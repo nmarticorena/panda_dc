@@ -2,7 +2,6 @@ from pathlib import Path
 import numpy as np
 import subprocess as sp
 import shlex
-import pdb
 
 
 class VideoRecorder:
