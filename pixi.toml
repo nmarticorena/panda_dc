@@ -26,6 +26,8 @@ pyrealsense2 = ">=2.56.5,<3"
 py-opencv = ">=4.12.0,<5"
 threadpoolctl = ">=3.6.0,<4"
 ffmpeg = "<8"
+jupyter = ">=1.1.1,<2"
+inquirerpy = ">=0.3.4,<0.4"
 
 [pypi-options]
 no-build-isolation = ["swift-sim", "roboticstoolbox-python", "spatialgeometry", "spatialmath-python"]
@@ -42,7 +44,7 @@ panda-desk = {git = "https://github.com/nmarticorena/panda_desk.git"}
 atomics = ">=1.0.3, <2"
 
 [activation.env]
-SERIAL_NAME = "usb-FTDI_USB__-__Serial_Converter_FTA7NLND-if00-port0"
+PANDA_IP = "172.16.0.2"
 
 [feature.dev.dependencies]
 ruff = "*"
