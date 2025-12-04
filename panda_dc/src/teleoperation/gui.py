@@ -17,12 +17,12 @@ class SwiftGui:
         env.launch()
 
         self.follower = rtb.models.Panda()  # Real robot
-        if i_follower_q:
+        if i_follower_q is not None:
             self.follower.q = i_follower_q
         env.add(self.follower)
 
         self.leader = rtb.models.Panda()  # Gello
-        if i_leader_q:
+        if i_leader_q is not None:
             self.leader.q = i_leader_q
         env.add(self.leader, robot_alpha=0.5)
 
