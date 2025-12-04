@@ -40,19 +40,10 @@ class DataRecorder:
         self.gripper_action = 0.0
 
     def record_state(self, s):
-        gello_q, robot_q, robot_X_BE, gripper_width = (
-            s["gello_q"],
-            s["robot_q"],
-            s["robot_X_BE"],
-            s["gripper_width"],
-        )
         self.cams.record_frame()
         state = {
-            "X_BE": np.array(robot_X_BE).reshape(4, 4).tolist(),
-            "robot_q": np.array(robot_q).tolist(),
-            "gello_q": np.array(gello_q[:7]).tolist(),
             "gripper_action": self.gripper_action,
-            "gripper_state": gripper_width,
+            **s
         }
         self.states.append(state)
 
@@ -67,18 +58,18 @@ class DataRecorder:
         # setting up cameras for recording
         self.cams = MultiRealsense(
             record_fps=self.record_fps,
-            serial_numbers=["123622270136", "035122250692"], #, "035122250388"],
             resolution=(640, 480),
-            depth_resolution=(640, 480),
+            # depth_resolution=(640, 480),
             enable_depth=False,
         )
         self.cams.cameras["123622270136"].set_exposure(exposure=5000, gain=60)
         self.cams.cameras["035122250692"].set_exposure(exposure=100, gain=60)
+        self.cams.cameras["036422070913"].set_exposure(exposure=100, gain=60)
         # self.cams.cameras["035122250388"].set_exposure(exposure=100, gain=60)
         self.cams.start()
         self.setup_streams()
 
-        self.gui = MultiCameraVisualizer(self.cams, 2,2)
+        self.gui = MultiCameraVisualizer(self.cams, 3,2)
         self.gui.start()
 
         # top camera for capturing single images

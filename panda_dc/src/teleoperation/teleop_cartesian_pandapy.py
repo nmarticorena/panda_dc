@@ -1,19 +1,20 @@
 import os
-
-import panda_py
-import panda_py.motion
-from panda_dc.src.dynamixel.robot import DynamixelRobot
+import time
 import numpy as np
-from panda_py import controllers
 import reactivex as rx
+from reactivex import scheduler
 from reactivex import operators as ops
 from scipy.spatial.transform.rotation import Rotation as R
+
+import panda_py
+from panda_dc.src.dynamixel.robot import DynamixelRobot
+from panda_py import controllers
 from panda_dc.src.teleoperation.gui import SwiftGui
 
 
 class Teleop:
     def __init__(
-        self, hostname: str = "172.16.0.2", has_gripper: bool = True, gui: bool = True
+        self, hostname: str = "172.16.0.2", has_gripper: bool = True, gui: bool = True, gripper_name: str = "umi_gripper"
     ):
         self.panda = panda_py.Panda(hostname)
         if has_gripper:
@@ -51,31 +52,42 @@ class Teleop:
         impedance = [400.0, 400.0, 400.0, 40.0, 40.0, 40.0]
 
         impedance = np.diag(impedance)
-        # q_nullspace = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         ctrl = controllers.CartesianImpedance(
             impedance=impedance,
             nullspace_stiffness=0.2,
             damping_ratio=0.99,
             filter_coeff=0.9,
         )
+        self.panda.enable_logging(1)
+        
 
         self.panda.start_controller(ctrl)
 
         print("---------YOU ARE IN CONTROL--------")
         with self.panda.create_context(frequency=200) as ctx:
             while ctx.ok() and not self.stop_requested:
+                
                 gello_q = self.gello.get_joint_state()
                 pose = panda_py.fk(gello_q[:7])
                 rot_mat = pose[:3, :3]
                 quat = R.from_matrix(rot_mat).as_quat()
                 ctrl.set_control(pose[:3, 3], quat)
+                panda_log = self.panda.get_log()
+
+
 
                 if self._callback:
+                    while len(self.panda.get_log()["dq"]) < 1:
+                        print(self.panda.get_log())
+
+                    panda_log = {k: v[0].tolist() for k, v in panda_log.items()}
+                    print(panda_log)
                     x = {
                         "robot_q": self.panda.q.tolist(),
-                        "robot_X_BE": self.panda.get_pose().tolist(),
-                        "gello_q": gello_q,
+                        "robot_X_BE": np.array(self.panda.get_pose()).reshape(4,4).tolist(),
+                        "gello_q": gello_q.tolist(),
                         "gripper_width": self.gripper.read_once().width,
+                        **panda_log,
                     }
                     self._callback(x)
                     self.gui.step(self.panda.q.tolist(), gello_q[:7])
@@ -91,11 +103,10 @@ class Teleop:
 
         self.thread = Thread(target=self.take_control)
         self.thread.start()
-        # self.thread.run()
 
     def create_gello_streams(self, frequency=2.0):
         self.gello_joints_stream = (
-            rx.interval(1.0 / frequency, scheduler=rx.scheduler.NewThreadScheduler())
+            rx.interval(1.0 / frequency, scheduler=scheduler.NewThreadScheduler())
             .pipe(ops.map(lambda _: self.gello.get_joint_state()))
             .pipe(ops.map(lambda x: np.round(x[-1], 2)))
             .pipe(ops.distinct_until_changed())
@@ -114,23 +125,15 @@ class Teleop:
             ops.filter(lambda x: x == "close")
         ).pipe(ops.map(lambda _: True))
 
-
 def create_gello() -> DynamixelRobot:
+    import json
+    import panda_dc
+    import pathlib
+    panda_dc_dir = pathlib.Path(panda_dc.__path__[0]).parent
+    config = json.load(open(os.path.join(panda_dc_dir, "config", "gello_configs", "grey.json"), "r"))
     return DynamixelRobot(
-        port=f"/dev/serial/by-id/{os.environ['SERIAL_NAME']}",
         real=True,
-        joint_ids=(1, 2, 3, 4, 5, 6, 7),
-        joint_offsets=(
-            3 * np.pi / 2,
-            2 * np.pi / 2,
-            2 * np.pi / 2,
-            2 * np.pi / 2,
-            2 * np.pi / 2,
-            2 * np.pi / 2,
-            (2 * np.pi / 2) - np.pi / 4,
-        ),
-        joint_signs=(1, -1, 1, 1, 1, -1, 1),
-        gripper_config=(8, 195, 153),
+        **config
     )
 
 
