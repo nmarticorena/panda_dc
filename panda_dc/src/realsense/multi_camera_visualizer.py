@@ -4,7 +4,7 @@ import multiprocessing as mp
 import numpy as np
 import cv2
 from threadpoolctl import threadpool_limits
-from panda_dc.src.realsense.multi_realsense import MultiRealsense
+from realsense.multi_realsense import MultiRealsense
 
 
 class MultiCameraVisualizer(mp.Process):
@@ -86,7 +86,6 @@ class MultiCameraVisualizer(mp.Process):
 
 if __name__ == "__main__":
     rs = MultiRealsense(
-        serial_numbers=["123622270136", "035122250692"],
     )
     rs.start()
     viewer = MultiCameraVisualizer(rs, row=2, col=2)
