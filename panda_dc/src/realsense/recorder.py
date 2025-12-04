@@ -55,7 +55,6 @@ class VideoRecorder:
     def record_frame(self, data: np.ndarray):
         assert self.writer is not None
         assert self.width == data.shape[1] and self.height == data.shape[0]
-        # if self.recorder_type == "depth":
         self.writer.stdin.write(data.tobytes())
         self.frame_counter += 1
 
