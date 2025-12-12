@@ -1,7 +1,6 @@
 # https://github.com/real-stanford/diffusion_policy/blob/main/diffusion_policy/shared_memory/shared_memory_ring_buffer.py
 from typing import Dict, List, Union
 
-from queue import Empty
 import numbers
 import time
 from multiprocessing.managers import SharedMemoryManager
