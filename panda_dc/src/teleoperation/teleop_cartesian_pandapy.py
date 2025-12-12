@@ -80,8 +80,7 @@ class Teleop:
                     while len(self.panda.get_log()["dq"]) < 1:
                         print(self.panda.get_log())
 
-                    panda_log = {k: v[0].tolist() for k, v in panda_log.items()}
-                    print(panda_log)
+                    panda_log = {k: np.atleast_1d(v)[0].tolist() for k, v in panda_log.items()}
                     x = {
                         "robot_q": self.panda.q.tolist(),
                         "robot_X_BE": np.array(self.panda.get_pose()).reshape(4,4).tolist(),
