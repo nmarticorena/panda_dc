@@ -27,7 +27,7 @@ gello_q = gello.get_joints()
 offset = gello_q[:7] -  current_robot_q
 
 gripper_open = gello_q[-1].copy()
-confirm = inquirer.confirm(message="Close the gripper").execute()
+confirm = inquirer.confirm(message="Close the gripper", default = True).execute()
 gripper_close = gello.get_joints()[-1].copy()
 
 diff = gripper_open - gripper_close
