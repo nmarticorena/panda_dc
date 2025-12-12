@@ -2,7 +2,6 @@
 
 from typing import Optional, Callable, Dict, Tuple
 import math
-import os
 import enum
 import time
 import json
@@ -10,12 +9,11 @@ import numpy as np
 import pyrealsense2 as rs
 import multiprocessing as mp
 from pathlib import Path
-import cv2
 from threadpoolctl import threadpool_limits
 from multiprocessing.managers import SharedMemoryManager
 from .shared_memory.shared_ndarray import SharedNDArray
 from .shared_memory.shared_memory_ring_buffer import SharedMemoryRingBuffer
-from .shared_memory.shared_memory_queue import SharedMemoryQueue, Full, Empty
+from .shared_memory.shared_memory_queue import SharedMemoryQueue, Empty
 from .recorder import VideoRecorder
 
 
@@ -93,6 +91,7 @@ class SingleRealsense(mp.Process):
             else vis_transform(dict(examples)),
             get_max_k=1,
             get_time_budget=0.2,
+            # put_desired_frequency=expedcted_capture_fps * 1.5,
             put_desired_frequency=expedcted_capture_fps,
         )
 
@@ -101,7 +100,7 @@ class SingleRealsense(mp.Process):
             examples=examples if transform is None else transform(dict(examples)),
             get_max_k=get_max_k,
             get_time_budget=0.2,
-            put_desired_frequency=expected_put_fps,
+            put_desired_frequency=expected_put_fps, # * 1.5,
         )
 
         # create command queue
@@ -380,6 +379,7 @@ class SingleRealsense(mp.Process):
             self.color_video_recorder.record_frame(rec_data["color"])
         if self.depth_video_recorder:
             self.depth_video_recorder.record_frame(rec_data["depth"])
+
         # self.command_queue.put({
         #     'cmd': Command.RECORD_FRAME.value
         # })
@@ -420,13 +420,17 @@ class SingleRealsense(mp.Process):
         rs_config = rs.config()
         if self.enable_color:
             rs_config.enable_stream(rs.stream.color, w, h, rs.format.rgb8, fps)
+            time.sleep(0.1)
         if self.enable_depth:
             rs_config.enable_stream(rs.stream.depth, dw, dh, rs.format.z16, fps)
+            time.sleep(0.1)
         if self.enable_infrared:
             rs_config.enable_stream(rs.stream.infrared, dw, dh, rs.format.y8, fps)
+            time.sleep(0.1)
 
         try:
             rs_config.enable_device(self.serial_number)
+            time.sleep(0.5)
 
             # start pipeline
             pipeline = rs.pipeline()
@@ -570,12 +574,19 @@ class SingleRealsense(mp.Process):
                         # put_data['timestamp'] = put_start_time + step_idx / self.put_fps
                         put_data["timestamp"] = receive_time
                         # print(step_idx, data['timestamp'])
-                        self.ring_buffer.put(put_data, wait=False)
+                        try:
+                            self.ring_buffer.put(put_data, wait=False)
+                        except TimeoutError as e:
+                            print(f"[SingleRealsense {self.serial_number}] dumping data. - {e}")
                 else:
                     step_idx = int((receive_time - put_start_time) * self.put_fps)
                     put_data["step_idx"] = step_idx
                     put_data["timestamp"] = receive_time
-                    self.ring_buffer.put(put_data, wait=False)
+                    try:
+                        self.ring_buffer.put(put_data, wait=False)
+                    except TimeoutError as e:
+                        print(f"[SingleRealsense {self.serial_number}] dumping data. - {e}")
+
 
                 # signal ready
                 if iter_idx == 0:
@@ -631,7 +642,17 @@ class SingleRealsense(mp.Process):
 
                         option = rs.option(command["option_enum"])
                         value = float(command["option_value"])
-                        sensor.set_option(option, value)
+                        sensor_setup = False
+                        while sensor_setup is False:
+                            try:
+                                sensor.set_option(option, value)
+                                sensor_setup = True
+                            except RuntimeError as e:
+                                print(f"[SingleRealsense {self.serial_number}] Failed to set option {option} to {value}: {e}")
+                                print("Retrying after 0.1s...")
+                                time.sleep(0.1)
+                            
+
                         # print('auto', sensor.get_option(rs.option.enable_auto_exposure))
                         # print('exposure', sensor.get_option(rs.option.exposure))
                         # print('gain', sensor.get_option(rs.option.gain))
