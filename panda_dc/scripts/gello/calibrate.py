@@ -43,6 +43,7 @@ calibration_data = {
     "joint_signs": [1, 1, 1, 1, 1, 1, 1],
     "joint_ids": [1, 2, 3, 4, 5, 6, 7],
     "gripper_config": [8, gripper_open * 180 / np.pi, gripper_close * 180 / np.pi],
+    "robot_home": current_robot_q.tolist(),
 }
 with open(f"config/gello_configs/{name}.json", "w") as f:
     json.dump(calibration_data, f, indent=4)

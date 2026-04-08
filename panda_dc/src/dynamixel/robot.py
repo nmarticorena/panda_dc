@@ -20,8 +20,10 @@ class DynamixelRobot:
         baudrate: int = 57600,
         gripper_config: Optional[Tuple[int, float, float]] = None,
         start_joints: Optional[np.ndarray] = None,
+        robot_home: Optional[np.ndarray] = None,
     ):
         self.gripper_open_close: Optional[Tuple[float, float]]
+        self.robot_home = robot_home
         if gripper_config is not None:
             assert joint_offsets is not None
             assert joint_signs is not None
