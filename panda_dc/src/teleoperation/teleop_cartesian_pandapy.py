@@ -78,7 +78,7 @@ class Teleop:
         impedance = [400.0, 400.0, 400.0, 40.0, 40.0, 40.0]
 
         impedance = np.diag(impedance)
-        ctrl = controllers.CartesianImpedance(
+        self.ctrl = controllers.CartesianImpedance(
             impedance=impedance,
             nullspace_stiffness=0.2,
             damping_ratio=0.99,
@@ -87,26 +87,29 @@ class Teleop:
         self.panda.enable_logging(1)
         
 
-        self.panda.start_controller(ctrl)
+        self.panda.start_controller(self.ctrl)
 
         print("---------YOU ARE IN CONTROL--------")
         with self.panda.create_context(frequency=200) as ctx:
             while ctx.ok() and not self.stop_requested:
+                if self.home_requested:
+                    self.home_robot()
+                    self.home_requested = False
                 
                 gello_q = self.gello.get_joint_state()
                 pose = panda_py.fk(gello_q[:7])
                 rot_mat = pose[:3, :3]
                 quat = R.from_matrix(rot_mat).as_quat()
-                ctrl.set_control(pose[:3, 3], quat)
+                self.ctrl.set_control(pose[:3, 3], quat)
                 panda_log = self.panda.get_log()
 
 
 
                 if self._callback:
                     while len(self.panda.get_log()["dq"]) < 1:
-                        print(self.panda.get_log())
+                        pass
 
-                    panda_log = {k: np.atleast_1d(v)[0].tolist() for k, v in panda_log.items()}
+                    panda_log = {k: v[0].tolist() for k, v in panda_log.items()}
                     x = {
                         "robot_q": self.panda.q.tolist(),
                         "robot_X_BE": np.array(self.panda.get_pose()).reshape(4,4).tolist(),
@@ -122,6 +125,9 @@ class Teleop:
 
     def relinquish(self):
         self.stop_requested = True
+
+    def send_home(self):
+        self.home_requested = True
 
     def take_control_async(self):
         from threading import Thread
