@@ -9,7 +9,9 @@ from scipy.spatial.transform.rotation import Rotation as R
 import panda_py
 from panda_dc.src.dynamixel.robot import DynamixelRobot
 from panda_py import controllers
+from panda_py import libfranka
 from panda_dc.src.teleoperation.gui import SwiftGui
+
 
 
 class Teleop:
@@ -17,14 +19,17 @@ class Teleop:
         self, hostname: str = "172.16.0.2", has_gripper: bool = True, gui: bool = True, gripper_name: str = "umi_gripper"
     ):
         self.panda = panda_py.Panda(hostname)
+        self.set_collision_behavior()
         if has_gripper:
             self.gripper = panda_py.libfranka.Gripper(hostname)
         else:
             self.gripper = None
         self.gello = create_gello()
-        self.home_q = np.deg2rad([-90, 0, 0, -90, 0, 90, 45])
+        # self.home_q = np.deg2rad([-90, 0, 0, -90, 0, 90, 45])
+        self.home_q = self.gello.robot_home
         self.stop_requested = False
         self._callback = None
+        self.home_requested = False
         self.create_gello_streams()
         if gui:
             self.gui = SwiftGui()
@@ -33,6 +38,27 @@ class Teleop:
 
     def set_callback(self, callback):
         self._callback = callback
+
+    def set_collision_behavior(self):
+        lower_torque_th_aceleration = [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0]
+        upper_torque_th_acceleration = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+        lower_torque_th_nominal = [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0]
+        upper_torque_th_nominal = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+        lower_force_th_acceleration = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+        upper_force_th_acceleration = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+        lower_force_th_nominal = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+        upper_force_th_nominal = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+        self.panda.get_robot().set_collision_behavior(
+            lower_torque_th_aceleration,
+            upper_torque_th_acceleration,
+            lower_torque_th_nominal,
+            upper_torque_th_nominal,
+            lower_force_th_acceleration,
+            upper_force_th_acceleration,
+            lower_force_th_nominal,
+            upper_force_th_nominal,
+        )
+
 
     def home_robot(self):
         self.panda.move_to_joint_position(self.home_q)

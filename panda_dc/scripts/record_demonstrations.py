@@ -92,7 +92,7 @@ class DataRecorder:
         self.record_data = not self.record_data
         if self.record_data:
             # save a photo of the current state
-
+            self.t.panda.start_controller(self.t.ctrl)
             self.demo_state_text = "Recording..."
             self.states = []
             path = Path(f"data/{self.params.name}/episodes/{self.idx}/video")
@@ -105,6 +105,7 @@ class DataRecorder:
         else:
             self.demo_state_text = "Resetting..."
             self.phase = 0.0
+            self.t.send_home()
             if self.disposable:
                 self.disposable.dispose()
                 self.cams.stop_recording()
