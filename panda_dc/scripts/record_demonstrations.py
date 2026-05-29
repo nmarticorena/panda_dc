@@ -16,6 +16,8 @@ from reactivex.subject import Subject
 class Params:
     name: tyro.conf.PositionalRequiredArgs[str]
     idx: int = 0
+    data_dir: Path = Path("data")
+    camera_config: Path = Path("config/cameras.yaml")
 
 
 class DataRecorder:
@@ -95,13 +97,14 @@ class DataRecorder:
             self.t.panda.start_controller(self.t.ctrl)
             self.demo_state_text = "Recording..."
             self.states = []
-            path = Path(f"data/{self.params.name}/episodes/{self.idx}/video")
-            path.mkdir(parents=True, exist_ok=True)
-            self.cams.start_recording(str(path))
+            episode_path = self.dataset_path / "episodes" / str(self.idx).zfill(4)
+            video_path = episode_path / "video"
+            video_path.mkdir(parents=True, exist_ok=True)
+            self.cams.start_recording(str(video_path))
             self.disposable = self.record_stream.subscribe(
                 lambda x: self.record_state(x)
             )
-            print("Recording demonstration {}".format(self.idx))
+            print(f"Recording demonstration {self.idx} to {episode_path}")
         else:
             self.demo_state_text = "Resetting..."
             self.phase = 0.0
@@ -111,9 +114,8 @@ class DataRecorder:
                 self.cams.stop_recording()
 
                 if not discard:
-                    with open(
-                        f"data/{self.params.name}/episodes/{self.idx}/state.json", "w"
-                    ) as f:
+                    episode_path = self.dataset_path / "episodes" / str(self.idx).zfill(4)
+                    with (episode_path / "state.json").open("w") as f:
                         json.dump(self.states, f, indent=4)
                     self.idx += 1
             print("Recording stopped.")
