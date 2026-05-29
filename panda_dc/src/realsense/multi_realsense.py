@@ -76,6 +76,7 @@ class MultiRealsense:
                 recording_transform=recording_transform[i],
                 verbose=verbose,
             )
+            time.sleep(0.5)  # avoid realsense usb conflict
 
         self.cameras: Dict[str, SingleRealsense] = cameras
         self.shm_manager = shm_manager
@@ -86,6 +87,9 @@ class MultiRealsense:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
+
+    # def __getitem__(self, key):
+    #     return self.cameras[key]
 
     @property
     def n_cameras(self):
@@ -222,7 +226,7 @@ class MultiRealsense:
             assert video_dir.parent.is_dir()
             video_dir.mkdir(parents=True, exist_ok=True)
             video_path = list()
-            for i in range(self.n_cameras):
+            for i in self.serial_numbers:
                 video_path.append(str(video_dir.joinpath(f"{i}.mp4").absolute()))
         assert len(video_path) == self.n_cameras
 
