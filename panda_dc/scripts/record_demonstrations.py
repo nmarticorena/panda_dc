@@ -1,30 +1,32 @@
 from panda_dc.src.realsense.multi_realsense import MultiRealsense
 from panda_dc.src.realsense.multi_camera_visualizer import MultiCameraVisualizer
 from panda_dc.src.teleoperation.teleop_cartesian_pandapy import Teleop
-import time
 import json
 import numpy as np
 from pathlib import Path
 import tyro
 from dataclasses import dataclass
 import cv2
+import yaml
+from InquirerPy import inquirer
 from reactivex import operators as ops
 from reactivex.subject import Subject
+from typing import Optional
 
 
 @dataclass
 class Params:
     name: tyro.conf.PositionalRequiredArgs[str]
-    idx: int = 0
+    idx: Optional[int] = None
     data_dir: Path = Path("data")
     camera_config: Path = Path("config/cameras.yaml")
+    record_fps: int = 10
 
 
 class DataRecorder:
     def __init__(self, params):
         self.params = params
-        self.t = Teleop()
-        self.record_fps = 10
+        self.record_fps = params.record_fps
         self.cams = None
         self.sensor_socket = None
         self.idx = params.idx
