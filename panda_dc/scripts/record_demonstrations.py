@@ -28,8 +28,10 @@ class DataRecorder:
         self.params = params
         self.record_fps = params.record_fps
         self.cams = None
+        self.gui = None
         self.sensor_socket = None
-        self.idx = params.idx
+        self.idx = params.idx if params.idx is not None else self.check_existing_demos()
+        self.t = Teleop()
         self.window_name = "Data Recorder"
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.demo_state_text = "Resetting..."
@@ -43,7 +45,35 @@ class DataRecorder:
         self.phase = 0.0
         self.gripper_action = 0.0
 
-    def record_state(self, s):
+    @property
+    def dataset_path(self):
+        return self.params.data_dir / self.params.name
+
+    def check_existing_demos(self):
+        dataset_path = self.dataset_path
+        if not dataset_path.exists():
+            return 0
+        episodes_path = dataset_path / "episodes"
+        if not episodes_path.exists():
+            return 0
+        existing_demos = [
+            int(p.name)
+            for p in episodes_path.iterdir()
+            if p.is_dir() and p.name.isdigit()
+        ]
+        if not existing_demos:
+            return 0
+
+        last_demo = max(existing_demos)
+        redo_last_demo = inquirer.confirm(
+            message=(
+                f"Last demo is {str(last_demo).zfill(4)}. Do you want to redo it?"
+            ),
+            default=False,
+        ).execute()
+        return last_demo if redo_last_demo else last_demo + 1
+
+       def record_state(self, s):
         self.cams.record_frame()
         state = {
             "gripper_action": self.gripper_action,
