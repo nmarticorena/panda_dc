@@ -5,7 +5,7 @@ import spatialmath as sm
 import spatialgeometry as sg
 import roboticstoolbox as rtb
 import swift
-from panda_dc.src.utils import replace_gripper
+from panda_dc.utils import replace_gripper
 
 
 env = swift.Swift()
@@ -36,5 +36,3 @@ env.add(com)
 
 
 env.hold()
-
-

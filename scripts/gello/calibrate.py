@@ -3,7 +3,7 @@ import time
 import numpy as np
 from InquirerPy import inquirer
 
-from panda_dc.src.dynamixel.driver import DynamixelDriver
+from panda_dc.dynamixel.driver import DynamixelDriver
 import panda_py
 import json
 

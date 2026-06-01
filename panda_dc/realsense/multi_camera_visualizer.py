@@ -4,7 +4,7 @@ import multiprocessing as mp
 import numpy as np
 import cv2
 from threadpoolctl import threadpool_limits
-from panda_dc.src.realsense.multi_realsense import MultiRealsense
+from panda_dc.realsense.multi_realsense import MultiRealsense
 
 
 class MultiCameraVisualizer(mp.Process):
@@ -17,6 +17,7 @@ class MultiCameraVisualizer(mp.Process):
         vis_fps=60,
         fill_value=0,
         rgb_to_bgr=True,
+        visible_serial_numbers=None,
     ):
         super().__init__()
         self.row = row
@@ -26,6 +27,7 @@ class MultiCameraVisualizer(mp.Process):
         self.fill_value = fill_value
         self.rgb_to_bgr = rgb_to_bgr
         self.realsense = realsense
+        self.visible_serial_numbers = visible_serial_numbers
         # shared variables
         self.stop_event = mp.Event()
 
@@ -59,6 +61,13 @@ class MultiCameraVisualizer(mp.Process):
         while not self.stop_event.is_set():
             vis_data = self.realsense.get_vis(out=vis_data)
             color = vis_data["color"]
+            if self.visible_serial_numbers is not None:
+                visible_indices = [
+                    self.realsense.serial_numbers.index(serial)
+                    for serial in self.visible_serial_numbers
+                    if serial in self.realsense.serial_numbers
+                ]
+                color = color[visible_indices]
             N, H, W, C = color.shape
             assert C == 3
             oh = H * self.row
@@ -85,8 +94,20 @@ class MultiCameraVisualizer(mp.Process):
 
 
 if __name__ == "__main__":
+    # rs = MultiRealsense(
+    #     serial_numbers=[
+    #         '123622270136', '035122250692'
+    #         ],
+    # )
     rs = MultiRealsense(
+        resolution=(640, 480),
+        record_fps=10,
+        depth_resolution=(640, 480),
+        enable_depth=False,
     )
+    rs.cameras["123622270136"].set_exposure(exposure=5000, gain=60)
+    rs.cameras["035122250692"].set_exposure(exposure=100, gain=60)
+
     rs.start()
     viewer = MultiCameraVisualizer(rs, row=2, col=2)
     viewer.run()

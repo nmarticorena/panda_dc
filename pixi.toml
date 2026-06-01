@@ -10,6 +10,8 @@ version = "0.1.0"
 dev = ["dev"]
 
 [tasks]
+calibrate_gello = {cmd = "python3 scripts/gello/calibrate.py"}
+record_demo = {cmd = "python3 scripts/record_demonstration.py"}
 
 [dependencies]
 python="3.11.*"

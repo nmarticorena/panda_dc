@@ -1,13 +1,18 @@
-from panda_dc.src.realsense.multi_realsense import MultiRealsense
-from panda_dc.src.realsense.multi_camera_visualizer import MultiCameraVisualizer
-from panda_dc.src.teleoperation.teleop_cartesian_pandapy import Teleop
+from panda_dc.realsense.multi_realsense import MultiRealsense
+from panda_dc.realsense.multi_camera_visualizer import MultiCameraVisualizer
+from panda_dc.realsense.camera_config import (
+    apply_camera_overrides,
+    get_realsense_kwargs,
+    get_visible_serial_numbers,
+    load_camera_config,
+)
+from panda_dc.teleoperation.teleop_cartesian_pandapy import Teleop
 import json
 import numpy as np
 from pathlib import Path
 import tyro
 from dataclasses import dataclass
 import cv2
-import yaml
 from InquirerPy import inquirer
 from reactivex import operators as ops
 from reactivex.subject import Subject
@@ -19,7 +24,7 @@ class Params:
     name: tyro.conf.PositionalRequiredArgs[str]
     idx: Optional[int] = None
     data_dir: Path = Path("data")
-    camera_config: Path = Path("config/cameras.yaml")
+    camera_config: Path = Path("config/default_cameras.yaml")
     record_fps: int = 10
 
 
@@ -73,12 +78,9 @@ class DataRecorder:
         ).execute()
         return last_demo if redo_last_demo else last_demo + 1
 
-       def record_state(self, s):
+    def record_state(self, s):
         self.cams.record_frame()
-        state = {
-            "gripper_action": self.gripper_action,
-            **s
-        }
+        state = {"gripper_action": self.gripper_action, **s}
         self.states.append(state)
 
     def setup_streams(self):
@@ -89,29 +91,26 @@ class DataRecorder:
     def setup(self):
         self.t.home_robot()
 
-        # setting up cameras for recording
-        self.cams = MultiRealsense(
-            record_fps=self.record_fps,
-            resolution=(640, 480),
-            # depth_resolution=(640, 480),
-            enable_depth=False,
-        )
-        self.cams.cameras["123622270136"].set_exposure(exposure=5000, gain=60)
-        self.cams.cameras["035122250692"].set_exposure(exposure=100, gain=60)
-        self.cams.cameras["036422070913"].set_exposure(exposure=100, gain=60)
-        # self.cams.cameras["035122250388"].set_exposure(exposure=100, gain=60)
+        camera_config = load_camera_config(self.params.camera_config)
+        realsense_kwargs = get_realsense_kwargs(camera_config, self.record_fps)
+        self.record_fps = realsense_kwargs["record_fps"]
+
+        self.cams = MultiRealsense(**realsense_kwargs)
+        apply_camera_overrides(self.cams, camera_config)
         self.cams.start()
         self.setup_streams()
 
-        self.gui = MultiCameraVisualizer(self.cams, 3,2)
+        visualizer_config = camera_config.visualizer
+        visible_serial_numbers = get_visible_serial_numbers(
+            camera_config, self.cams.serial_numbers
+        )
+        self.gui = MultiCameraVisualizer(
+            self.cams,
+            visualizer_config.get("rows", 3),
+            visualizer_config.get("cols", 2),
+            visible_serial_numbers=visible_serial_numbers,
+        )
         self.gui.start()
-
-        # top camera for capturing single images
-        # self.static_camera_pipeline = rs.pipeline()
-        # config = rs.config()
-        # config.enable_device("035122250388")
-        # config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-        # self.static_camera_pipeline.start(config)
 
     def grasp(self, x):
         print(x)
@@ -146,7 +145,9 @@ class DataRecorder:
                 self.cams.stop_recording()
 
                 if not discard:
-                    episode_path = self.dataset_path / "episodes" / str(self.idx).zfill(4)
+                    episode_path = (
+                        self.dataset_path / "episodes" / str(self.idx).zfill(4)
+                    )
                     with (episode_path / "state.json").open("w") as f:
                         json.dump(self.states, f, indent=4)
                     self.idx += 1
@@ -155,11 +156,11 @@ class DataRecorder:
 
     def update_window(self):
         # Create a black background
-        frame = np.zeros((400, 400, 3), dtype=np.uint8)
+        frame = np.zeros((600, 600, 3), dtype=np.uint8)
 
         # Set the color based on mode
         color = (0, 0, 255) if self.record_data else (0, 255, 0)
-        cv2.rectangle(frame, (0, 0), (400, 400), color, -1)
+        cv2.rectangle(frame, (0, 0), (600, 600), color, -1)
 
         # Add text for demonstration state and number
         cv2.putText(
@@ -198,7 +199,7 @@ class DataRecorder:
 
     def start_recording(self):
         cv2.namedWindow(self.window_name)
-        cv2.moveWindow(self.window_name, 400, 400)
+        cv2.moveWindow(self.window_name, 600, 600)
         while True:
             self.update_window()
             self.key = cv2.waitKey(10) & 0xFF
@@ -212,7 +213,8 @@ class DataRecorder:
                 break
 
     def stop(self):
-        self.cams.stop(wait=True)
+        if self.cams is not None:
+            self.cams.stop(wait=True)
         self.t.relinquish()
         self.t.home_robot()
         cv2.destroyAllWindows()

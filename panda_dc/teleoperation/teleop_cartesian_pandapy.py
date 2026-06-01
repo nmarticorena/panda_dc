@@ -7,10 +7,10 @@ from reactivex import operators as ops
 from scipy.spatial.transform.rotation import Rotation as R
 
 import panda_py
-from panda_dc.src.dynamixel.robot import DynamixelRobot
+from panda_dc.dynamixel.robot import DynamixelRobot
 from panda_py import controllers
 from panda_py import libfranka
-from panda_dc.src.teleoperation.gui import SwiftGui
+from panda_dc.teleoperation.gui import SwiftGui
 
 
 
@@ -85,7 +85,7 @@ class Teleop:
             filter_coeff=0.9,
         )
         self.panda.enable_logging(1)
-        
+
 
         self.panda.start_controller(self.ctrl)
 
@@ -95,7 +95,7 @@ class Teleop:
                 if self.home_requested:
                     self.home_robot()
                     self.home_requested = False
-                
+
                 gello_q = self.gello.get_joint_state()
                 pose = panda_py.fk(gello_q[:7])
                 rot_mat = pose[:3, :3]
