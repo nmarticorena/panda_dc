@@ -12,31 +12,75 @@ import numpy as np
 from pathlib import Path
 import tyro
 from dataclasses import dataclass
+from datetime import datetime
 import cv2
+from InquirerPy.base.control import Choice
 from InquirerPy import inquirer
 from reactivex import operators as ops
 from reactivex.subject import Subject
 from typing import Optional
 
+GELLO_CONFIG_DIR = Path(__file__).resolve().parents[1] / "config" / "gello_configs"
+
 
 @dataclass
 class Params:
-    name: tyro.conf.PositionalRequiredArgs[str]
+    name: Optional[str] = None
     idx: Optional[int] = None
     data_dir: Path = Path("data")
     camera_config: Path = Path("config/default_cameras.yaml")
+    camera_defaults: Path = Path("config/camera_defaults.yaml")
     record_fps: int = 10
+
+
+def get_experiment_name(name: Optional[str]) -> str:
+    if name:
+        return name
+
+    return inquirer.text(
+        message="Experiment name:",
+        validate=lambda value: bool(value.strip()),
+        invalid_message="Experiment name cannot be empty.",
+        filter=lambda value: value.strip(),
+    ).execute()
+
+
+def select_gello_config() -> Path:
+    gello_configs = sorted(
+        GELLO_CONFIG_DIR.glob("*.json"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    if not gello_configs:
+        raise FileNotFoundError(f"No GELLO configs found in {GELLO_CONFIG_DIR}")
+
+    choices = [
+        Choice(
+            value=config,
+            name=(
+                f"{config.stem} "
+                f"({datetime.fromtimestamp(config.stat().st_mtime).strftime('%d-%m-%Y')})"
+            ),
+        )
+        for config in gello_configs
+    ]
+
+    return inquirer.select(
+        message="Select GELLO configuration:",
+        choices=choices,
+    ).execute()
 
 
 class DataRecorder:
     def __init__(self, params):
         self.params = params
+        self.params.name = get_experiment_name(params.name)
         self.record_fps = params.record_fps
         self.cams = None
         self.gui = None
         self.sensor_socket = None
         self.idx = params.idx if params.idx is not None else self.check_existing_demos()
-        self.t = Teleop()
+        self.t = Teleop(gello_config=select_gello_config())
         self.window_name = "Data Recorder"
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.demo_state_text = "Resetting..."
@@ -91,7 +135,10 @@ class DataRecorder:
     def setup(self):
         self.t.home_robot()
 
-        camera_config = load_camera_config(self.params.camera_config)
+        camera_config = load_camera_config(
+            self.params.camera_config,
+            camera_defaults_path=self.params.camera_defaults,
+        )
         realsense_kwargs = get_realsense_kwargs(camera_config, self.record_fps)
         self.record_fps = realsense_kwargs["record_fps"]
 
