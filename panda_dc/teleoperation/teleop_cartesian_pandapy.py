@@ -16,7 +16,12 @@ from panda_dc.teleoperation.gui import SwiftGui
 
 class Teleop:
     def __init__(
-        self, hostname: str = "172.16.0.2", has_gripper: bool = True, gui: bool = True, gripper_name: str = "umi_gripper"
+        self,
+        hostname: str = "172.16.0.2",
+        has_gripper: bool = True,
+        gui: bool = True,
+        gripper_name: str = "umi_gripper",
+        gello_config: str | os.PathLike | None = None,
     ):
         self.panda = panda_py.Panda(hostname)
         self.set_collision_behavior()
@@ -24,7 +29,7 @@ class Teleop:
             self.gripper = panda_py.libfranka.Gripper(hostname)
         else:
             self.gripper = None
-        self.gello = create_gello()
+        self.gello = create_gello(gello_config)
         # self.home_q = np.deg2rad([-90, 0, 0, -90, 0, 90, 45])
         self.home_q = self.gello.robot_home
         self.stop_requested = False
@@ -156,12 +161,20 @@ class Teleop:
             ops.filter(lambda x: x == "close")
         ).pipe(ops.map(lambda _: True))
 
-def create_gello() -> DynamixelRobot:
+def create_gello(config_path: str | os.PathLike | None = None) -> DynamixelRobot:
     import json
     import panda_dc
     import pathlib
-    panda_dc_dir = pathlib.Path(panda_dc.__path__[0]).parent
-    config = json.load(open(os.path.join(panda_dc_dir, "config", "gello_configs", "grey.json"), "r"))
+
+    if config_path is None:
+        panda_dc_dir = pathlib.Path(panda_dc.__path__[0]).parent
+        config_path = panda_dc_dir / "config" / "gello_configs" / "grey.json"
+    else:
+        config_path = pathlib.Path(config_path)
+
+    with config_path.open("r") as f:
+        config = json.load(f)
+
     return DynamixelRobot(
         real=True,
         **config
