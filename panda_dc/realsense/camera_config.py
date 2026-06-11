@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
@@ -12,9 +15,9 @@ class CameraConfig:
     visualizer: dict
 
 
-def load_camera_config(path: Path) -> CameraConfig:
+def load_config_file(path: Path) -> dict:
     if not path.exists():
-        raise FileNotFoundError(f"Camera config not found: {path}")
+        raise FileNotFoundError(f"Config not found: {path}")
 
     with path.open("r") as f:
         if path.suffix.lower() in {".yaml", ".yml"}:
@@ -28,16 +31,76 @@ def load_camera_config(path: Path) -> CameraConfig:
             )
 
     if not config:
-        raise ValueError(f"Camera config is empty: {path}")
+        raise ValueError(f"Config is empty: {path}")
+    if not isinstance(config, dict):
+        raise ValueError(f"Config must contain a mapping: {path}")
+    return config
 
-    camera_entries = config.get("camera_defaults", config.get("cameras", []))
+
+def normalize_camera_defaults(camera_entries, path: Path) -> dict:
+    if camera_entries is None:
+        return {}
+
     camera_overrides = {}
+
+    if isinstance(camera_entries, dict):
+        for serial_number, camera in camera_entries.items():
+            if camera is None:
+                camera = {}
+            if not isinstance(camera, dict):
+                raise ValueError(
+                    f"Camera defaults for {serial_number} must be a mapping: {path}"
+                )
+            camera_overrides[str(serial_number)] = {
+                "serial_number": str(serial_number),
+                **camera,
+            }
+        return camera_overrides
+
     for i, camera in enumerate(camera_entries):
+        if not isinstance(camera, dict):
+            raise ValueError(f"Camera config entry {i} must be a mapping: {path}")
         if "serial_number" not in camera:
             raise ValueError(
                 f"Camera config entry {i} is missing serial_number: {path}"
             )
         camera_overrides[str(camera["serial_number"])] = camera
+
+    return camera_overrides
+
+
+def get_camera_defaults(config: dict):
+    if "camera_defaults" in config:
+        return config["camera_defaults"]
+    if "cameras" in config:
+        return config["cameras"]
+    if not any(key in config for key in ("multi_realsense", "visualizer")):
+        return config
+    return []
+
+
+def load_camera_config(
+    path: Path,
+    camera_defaults_path: Optional[Path] = None,
+) -> CameraConfig:
+    config = load_config_file(path)
+
+    camera_overrides = {}
+    if camera_defaults_path is not None:
+        default_config = load_config_file(camera_defaults_path)
+        camera_overrides.update(
+            normalize_camera_defaults(
+                get_camera_defaults(default_config),
+                camera_defaults_path,
+            )
+        )
+
+    camera_overrides.update(
+        normalize_camera_defaults(
+            get_camera_defaults(config),
+            path,
+        )
+    )
 
     return CameraConfig(
         multi_realsense=config.get("multi_realsense", {}),

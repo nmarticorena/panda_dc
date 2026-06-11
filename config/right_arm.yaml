@@ -1,0 +1,35 @@
+multi_realsense:
+  # true means MultiRealsense will initialize every connected RealSense camera.
+  # Set use_connected_cameras: false and fill serial_numbers to restrict/order cameras.
+  use_connected_cameras: false
+  serial_numbers: ["123622270136", "035122250692"]
+  record_fps: 10
+  capture_fps: 30
+  resolution: [640, 480]
+  depth_resolution: [640, 480]
+  enable_color: true
+  enable_depth: false
+  enable_infrared: false
+  record_depth: true
+
+visualizer:
+  rows: 3
+  cols: 2
+  # Cameras hidden here are still initialized and recorded.
+  hidden_serial_numbers: []
+  # Optional allowlist. If set, only these cameras are displayed.
+  # visible_serial_numbers: ["123622270136", "035122250692"]
+
+camera_defaults:
+  - serial_number: "123622270136"
+    exposure: 5000
+    gain: 60
+    show: true
+  - serial_number: "035122250692"
+    exposure: 100
+    gain: 60
+    show: true
+  - serial_number: "036422070913"
+    exposure: 100
+    gain: 60
+    show: true

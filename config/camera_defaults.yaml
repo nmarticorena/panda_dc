@@ -1,0 +1,13 @@
+camera_defaults:
+  "123622270136":
+    exposure: 5000
+    gain: 60
+    show: true
+  "035122250692":
+    exposure: 100
+    gain: 60
+    show: true
+  "036422070913":
+    exposure: 100
+    gain: 60
+    show: true
