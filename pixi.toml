@@ -12,6 +12,8 @@ dev = ["dev"]
 [tasks]
 calibrate_gello = {cmd = "python3 scripts/gello/calibrate.py"}
 record_demo = {cmd = "python3 scripts/record_demonstrations.py"}
+test_gripper = {cmd = "python3 scripts/check_gripper.py"}
+test_robotiq = {cmd = "python3 scripts/check_robotiq.py"}
 # install_zed = {cmd = "python /usr/local/zed/get_python_api.py", description = "Install ZED Python API"}
 
 [dependencies]
