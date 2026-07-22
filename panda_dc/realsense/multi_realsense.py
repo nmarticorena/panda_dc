@@ -34,6 +34,7 @@ class MultiRealsense:
         recording_transform: Optional[
             Union[Callable[[Dict], Dict], List[Callable]]
         ] = None,
+        flip_visual: Union[bool, List[bool], Dict[str, bool]] = False,
         # video_recorder: Optional[Union[VideoRecorder, List[VideoRecorder]]]=None,
         verbose=False,
     ):
@@ -49,6 +50,11 @@ class MultiRealsense:
         transform = repeat_to_list(transform, n_cameras, Callable)
         vis_transform = repeat_to_list(vis_transform, n_cameras, Callable)
         recording_transform = repeat_to_list(recording_transform, n_cameras, Callable)
+        flip_visual = normalize_flip_visual(flip_visual, serial_numbers)
+
+        for i, should_flip in enumerate(flip_visual):
+            if should_flip:
+                vis_transform[i] = make_flip_vis_transform(vis_transform[i])
 
         # video_recorder = repeat_to_list(
         #     video_recorder, n_cameras, VideoRecorder)
@@ -253,3 +259,24 @@ def repeat_to_list(x, n: int, cls):
         x = [x] * n
     assert len(x) == n
     return x
+
+
+def normalize_flip_visual(
+    flip_visual: Union[bool, List[bool], Dict[str, bool]],
+    serial_numbers: List[str],
+) -> List[bool]:
+    if isinstance(flip_visual, dict):
+        return [bool(flip_visual.get(serial, False)) for serial in serial_numbers]
+    return repeat_to_list(flip_visual, len(serial_numbers), bool)
+
+
+def make_flip_vis_transform(transform: Optional[Callable[[Dict], Dict]] = None):
+    def flip_vis(data: Dict) -> Dict:
+        out = transform(dict(data)) if transform is not None else dict(data)
+        for key in ("color", "depth", "infrared"):
+            if key in out:
+                out[key] = np.ascontiguousarray(np.flip(np.flip(out[key], axis=0), axis=1))
+
+        return out
+
+    return flip_vis

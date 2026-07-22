@@ -120,6 +120,7 @@ def get_realsense_kwargs(config: CameraConfig, record_fps: int) -> dict:
         "enable_color": settings.get("enable_color", True),
         "enable_infrared": settings.get("enable_infrared", False),
         "record_depth": settings.get("record_depth", True),
+        "flip_visual": get_flip_visual_config(settings, config.camera_overrides),
     }
 
     serial_numbers = settings.get("serial_numbers")
@@ -137,6 +138,23 @@ def get_realsense_kwargs(config: CameraConfig, record_fps: int) -> dict:
         kwargs["serial_numbers"] = [str(serial) for serial in serial_numbers]
 
     return kwargs
+
+
+def get_flip_visual_config(settings: dict, camera_overrides: dict):
+    camera_flip_visual = {
+        str(serial_number): bool(camera["flip_visual"])
+        for serial_number, camera in camera_overrides.items()
+        if "flip_visual" in camera
+    }
+
+    if camera_flip_visual:
+        flip_visual = settings.get("flip_visual")
+        if isinstance(flip_visual, dict):
+            return {**flip_visual, **camera_flip_visual}
+        if flip_visual is None or flip_visual is False:
+            return camera_flip_visual
+
+    return settings.get("flip_visual", False)
 
 
 def apply_camera_overrides(realsense, config: CameraConfig):

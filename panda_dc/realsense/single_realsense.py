@@ -50,8 +50,10 @@ class SingleRealsense(mp.Process):
         vis_transform: Optional[Callable[[Dict], Dict]] = None,
         recording_transform: Optional[Callable[[Dict], Dict]] = None,
         verbose=False,
+        flip_visual=False,
     ):
         super().__init__()
+        self.flip_visual = flip_visual
 
         if put_fps is None:
             put_fps = capture_fps
