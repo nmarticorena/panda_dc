@@ -14,7 +14,6 @@ calibrate_gello = {cmd = "python3 scripts/gello/calibrate.py"}
 record_demo = {cmd = "python3 scripts/record_demonstrations.py"}
 test_gripper = {cmd = "python3 scripts/check_gripper.py"}
 test_robotiq = {cmd = "python3 scripts/check_robotiq.py"}
-# install_zed = {cmd = "python /usr/local/zed/get_python_api.py", description = "Install ZED Python API"}
 
 [dependencies]
 python="3.11.*"
@@ -56,6 +55,8 @@ panda-python = ">=0.8.1, <0.9"
 panda-desk = {git = "https://github.com/nmarticorena/panda_desk.git"}
 atomics = ">=1.0.3, <2"
 pyrobotiqgripper = ">=3.2.8, <4"
+pyzed = {path="./pyzed-5.0-cp311-cp311-linux_x86_64.whl"}
+multiplezed = {path="../zed/", editable = true}
 ai2_robot_infra = {git = "https://github.com/allenai/ai2_robot_infra.git", extras = ["zed"]}
 
 
