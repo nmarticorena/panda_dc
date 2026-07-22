@@ -1,34 +1,37 @@
 import os
-import time
 import numpy as np
+from typing import Literal
 import reactivex as rx
 from reactivex import scheduler
 from reactivex import operators as ops
 from scipy.spatial.transform.rotation import Rotation as R
+import pyrobotiqgripper as robotiq
 
 import panda_py
 from panda_dc.dynamixel.robot import DynamixelRobot
 from panda_py import controllers
-from panda_py import libfranka
 from panda_dc.teleoperation.gui import SwiftGui
+from panda_dc.teleoperation.gripper import FrankaGripper, RobotiqGripper, NoneGripper
 
+GripperType = Literal["none", "franka_hand", "robotiq"]
 
 
 class Teleop:
     def __init__(
         self,
         hostname: str = "172.16.0.2",
-        has_gripper: bool = True,
+        gripper: GripperType = "franka_hand",
         gui: bool = True,
-        gripper_name: str = "umi_gripper",
         gello_config: str | os.PathLike | None = None,
     ):
         self.panda = panda_py.Panda(hostname)
         self.set_collision_behavior()
-        if has_gripper:
-            self.gripper = panda_py.libfranka.Gripper(hostname)
+        if gripper == "franka_hand":
+            self.gripper = FrankaGripper(hostname)
+        elif gripper == "robotiq":
+            self.gripper = RobotiqGripper()
         else:
-            self.gripper = None
+            self.gripper = NoneGripper()
         self.gello = create_gello(gello_config)
         # self.home_q = np.deg2rad([-90, 0, 0, -90, 0, 90, 45])
         self.home_q = self.gello.robot_home
@@ -119,8 +122,9 @@ class Teleop:
                         "robot_q": self.panda.q.tolist(),
                         "robot_X_BE": np.array(self.panda.get_pose()).reshape(4,4).tolist(),
                         "gello_q": gello_q.tolist(),
-                        "gripper_width": self.gripper.read_once().width,
-                        **panda_log,
+                        "gripper_width": self.gripper.width_m(),
+                        "libfranka": {**panda_log},
+                        "gripper": {**self.gripper.read()},
                     }
                     self._callback(x)
                     self.gui.step(self.panda.q.tolist(), gello_q[:7])
