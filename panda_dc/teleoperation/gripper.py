@@ -1,4 +1,5 @@
 import panda_py
+import numpy as np
 import pyrobotiqgripper as robotiq
 from abc import abstractmethod, ABC
 
@@ -80,13 +81,15 @@ class NoneGripper(Gripper):
 
 class RobotiqGripper(Gripper):
     def __init__(self):
-        self._gripper = robotiq.RobotiqGripper()
+        self._gripper = robotiq.RobotiqGripper("/dev/ttyUSB0") # Todo make a udevrule
         if not self._gripper.isActivated():
             print("Activating Robotiq gripper...")
             self._gripper.activate()
         if not self._gripper.is_mm_calibrated():
             print("Calibrating Robotiq gripper...")
             self._gripper.calibrate_mm(0, 85)
+
+        self.open()
 
     def open(self):
         self._gripper.open()
@@ -99,8 +102,17 @@ class RobotiqGripper(Gripper):
         self._gripper.move(pos, speed)
 
     def grasp(self, width, speed, force, **kwargs):
-        pos = int((1.0 - width / 0.085) * 255)
-        return self._gripper.grasp(pos, speed, force)
+        '''
+        Grasp the object with the Robotiq gripper.
+        speed: m/s 
+        force: N
+        '''
+        normalize_speed = speed / 85
+        normalize_speed = np.clip(normalize_speed, 0.0, 1.0) * 255
+        normalized_force = force / 235
+        normalized_force = np.clip(normalized_force, 0.0, 1.0) * 255
+        speed = int((1.0 - speed) * 255)
+        return self._gripper.close(normalize_speed, normalized_force)
 
     def read(self):
         return self._gripper.status()
