@@ -52,15 +52,12 @@ class DynamixelRobot:
             self._joint_signs = np.array(joint_signs)
 
         assert len(self._joint_ids) == len(self._joint_offsets), (
-            f"joint_ids: {len(self._joint_ids)}, "
-            f"joint_offsets: {len(self._joint_offsets)}"
+            f"joint_ids: {len(self._joint_ids)}, joint_offsets: {len(self._joint_offsets)}"
         )
         assert len(self._joint_ids) == len(self._joint_signs), (
             f"joint_ids: {len(self._joint_ids)}, joint_signs: {len(self._joint_signs)}"
         )
-        assert np.all(np.abs(self._joint_signs) == 1), (
-            f"joint_signs: {self._joint_signs}"
-        )
+        assert np.all(np.abs(self._joint_signs) == 1), f"joint_signs: {self._joint_signs}"
 
         if real:
             self._driver = DynamixelDriver(joint_ids, port=port, baudrate=baudrate)
@@ -79,13 +76,8 @@ class DynamixelRobot:
             if gripper_config is not None:
                 current_joints = current_joints[:-1]
                 start_joints = start_joints[:-1]
-            for c_joint, s_joint, joint_offset in zip(
-                current_joints, start_joints, self._joint_offsets
-            ):
-                new_joint_offsets.append(
-                    np.pi * 2 * np.round((s_joint - c_joint) / (2 * np.pi))
-                    + joint_offset
-                )
+            for c_joint, s_joint, joint_offset in zip(current_joints, start_joints, self._joint_offsets):
+                new_joint_offsets.append(np.pi * 2 * np.round((s_joint - c_joint) / (2 * np.pi)) + joint_offset)
             if gripper_config is not None:
                 new_joint_offsets.append(self._joint_offsets[-1])
             self._joint_offsets = np.array(new_joint_offsets)
@@ -99,9 +91,7 @@ class DynamixelRobot:
 
         if self.gripper_open_close is not None:
             # map pos to [0, 1]
-            g_pos = (pos[-1] - self.gripper_open_close[0]) / (
-                self.gripper_open_close[1] - self.gripper_open_close[0]
-            )
+            g_pos = (pos[-1] - self.gripper_open_close[0]) / (self.gripper_open_close[1] - self.gripper_open_close[0])
             g_pos = min(max(0, g_pos), 1)
             pos[-1] = g_pos
 

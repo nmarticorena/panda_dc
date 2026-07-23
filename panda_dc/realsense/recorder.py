@@ -30,13 +30,13 @@ class VideoRecorder:
         if self.recorder_type == "color":
             encoder = "hevc_nvenc"
             # encoder = "hevc" # if hardware limit of 5 reached use this instead
-            self.get_command = (
-                lambda path: f"ffmpeg {self.loglevel} -y -s {self.width}x{self.height} -pixel_format rgb24 -f rawvideo -r {self.fps} -i pipe: -vcodec {encoder} -pix_fmt yuv420p {path} -threads 1 {self.x265_params}"
+            self.get_command = lambda path: (
+                f"ffmpeg {self.loglevel} -y -s {self.width}x{self.height} -pixel_format rgb24 -f rawvideo -r {self.fps} -i pipe: -vcodec {encoder} -pix_fmt yuv420p {path} -threads 1 {self.x265_params}"
             )
         elif self.recorder_type == "depth":
             encoder = "hevc"
-            self.get_command = (
-                lambda path: f"ffmpeg {self.loglevel} -y -s {self.width}x{self.height} -pixel_format gray16le -f rawvideo -r {self.fps} -i pipe: -vcodec {encoder} -pix_fmt gray12le {path} -threads 1 {self.x265_params}"
+            self.get_command = lambda path: (
+                f"ffmpeg {self.loglevel} -y -s {self.width}x{self.height} -pixel_format gray16le -f rawvideo -r {self.fps} -i pipe: -vcodec {encoder} -pix_fmt gray12le {path} -threads 1 {self.x265_params}"
             )
         self.writer = None
 
@@ -48,9 +48,7 @@ class VideoRecorder:
             path = Path(path)
         assert self.writer is None
         # print(self.get_command(path))
-        self.writer = sp.Popen(
-            shlex.split(self.get_command(path)), stdout=sp.DEVNULL, stdin=sp.PIPE
-        )
+        self.writer = sp.Popen(shlex.split(self.get_command(path)), stdout=sp.DEVNULL, stdin=sp.PIPE)
 
     def record_frame(self, data: np.ndarray):
         assert self.writer is not None

@@ -68,7 +68,6 @@ class Teleop:
             upper_force_th_nominal,
         )
 
-
     def home_robot(self):
         self.panda.move_to_joint_position(self.home_q)
 
@@ -96,7 +95,6 @@ class Teleop:
         self.panda.enable_logging(1)
         self.panda_model = rtb.models.Panda()
 
-
         self.panda.start_controller(self.ctrl)
 
         print("---------YOU ARE IN CONTROL--------")
@@ -110,14 +108,12 @@ class Teleop:
                 if isinstance(self.gripper, FrankaGripper):
                     pose = panda_py.fk(gello_q[:7])
                 # if isinstance(self.gripper, RobotiqGripper):
-                else: # Technically if we are not using any gripper this should be the eef
-                    pose = self.panda_model.fkine(gello_q[:7], end = "panda_link8").A
+                else:  # Technically if we are not using any gripper this should be the eef
+                    pose = self.panda_model.fkine(gello_q[:7], end="panda_link8").A
                 rot_mat = pose[:3, :3]
                 quat = R.from_matrix(rot_mat).as_quat()
                 self.ctrl.set_control(pose[:3, 3], quat)
                 panda_log = self.panda.get_log()
-
-
 
                 if self._callback:
                     while len(self.panda.get_log()["dq"]) < 1:
@@ -126,7 +122,7 @@ class Teleop:
                     panda_log = {k: v[0].tolist() for k, v in panda_log.items()}
                     x = {
                         "robot_q": self.panda.q.tolist(),
-                        "robot_X_BE": np.array(self.panda.get_pose()).reshape(4,4).tolist(),
+                        "robot_X_BE": np.array(self.panda.get_pose()).reshape(4, 4).tolist(),
                         "gello_q": gello_q.tolist(),
                         "gripper_width": self.gripper.width_m(),
                         "libfranka": {**panda_log},
@@ -167,9 +163,10 @@ class Teleop:
             .pipe(ops.distinct_until_changed())
         )
 
-        self.gello_button_stream = self.gello_gripper_stream.pipe(
-            ops.filter(lambda x: x == "close")
-        ).pipe(ops.map(lambda _: True))
+        self.gello_button_stream = self.gello_gripper_stream.pipe(ops.filter(lambda x: x == "close")).pipe(
+            ops.map(lambda _: True)
+        )
+
 
 def create_gello(config_path: str | os.PathLike | None = None) -> DynamixelRobot:
     import json
@@ -185,10 +182,7 @@ def create_gello(config_path: str | os.PathLike | None = None) -> DynamixelRobot
     with config_path.open("r") as f:
         config = json.load(f)
 
-    return DynamixelRobot(
-        real=True,
-        **config
-    )
+    return DynamixelRobot(real=True, **config)
 
 
 def check_joint_discrepency(q1, q2) -> bool:
@@ -206,9 +200,7 @@ def check_joint_discrepency(q1, q2) -> bool:
             q1[id_mask],
             q2[id_mask],
         ):
-            print(
-                f"joint[{i}]: \t delta: {delta:4.3f} , leader: \t{joint:4.3f} , follower: \t{current_j:4.3f}"
-            )
+            print(f"joint[{i}]: \t delta: {delta:4.3f} , leader: \t{joint:4.3f} , follower: \t{current_j:4.3f}")
             res = False
     return res
 

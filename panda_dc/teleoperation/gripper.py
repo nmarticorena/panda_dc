@@ -3,28 +3,19 @@ import numpy as np
 import pyrobotiqgripper as robotiq
 from abc import abstractmethod, ABC
 
+
 class Gripper(ABC):
     @abstractmethod
-    def open(self) -> None:
-        ...
+    def open(self) -> None: ...
 
     @abstractmethod
-    def close(self) -> None:
-        ...
+    def close(self) -> None: ...
 
     @abstractmethod
-    def move(self, width: float, speed: float = 0.1) -> None:
-        ...
+    def move(self, width: float, speed: float = 0.1) -> None: ...
 
     @abstractmethod
-    def grasp(
-        self,
-        width: float,
-        speed: float,
-        force: float,
-        **kwargs    
-    ) -> bool:
-        ...
+    def grasp(self, width: float, speed: float, force: float, **kwargs) -> bool: ...
 
     @abstractmethod
     def read(self):
@@ -35,6 +26,7 @@ class Gripper(ABC):
     def width_m(self) -> float:
         """Return the current gripper width in meters."""
         ...
+
 
 class FrankaGripper(Gripper):
     def __init__(self, hostname: str):
@@ -50,15 +42,14 @@ class FrankaGripper(Gripper):
         self._gripper.move(width, speed)
 
     def grasp(self, width, speed, force, epsilon_inner=0.005, epsilon_outer=0.005):
-        return self._gripper.grasp(
-            width, speed, force, epsilon_inner, epsilon_outer
-        )
+        return self._gripper.grasp(width, speed, force, epsilon_inner, epsilon_outer)
 
     def read(self):
         return self._gripper.read_once()
-    
+
     def width_m(self) -> float:
         return self._gripper.read_once().width
+
 
 class NoneGripper(Gripper):
     def open(self):
@@ -79,9 +70,10 @@ class NoneGripper(Gripper):
     def width_m(self) -> float:
         return 0.0
 
+
 class RobotiqGripper(Gripper):
     def __init__(self):
-        self._gripper = robotiq.RobotiqGripper("/dev/ttyUSB0") # Todo make a udevrule
+        self._gripper = robotiq.RobotiqGripper("/dev/ttyUSB0")  # Todo make a udevrule
         if not self._gripper.isActivated():
             print("Activating Robotiq gripper...")
             self._gripper.activate()
@@ -102,11 +94,11 @@ class RobotiqGripper(Gripper):
         self._gripper.move(pos, speed)
 
     def grasp(self, width, speed, force, **kwargs):
-        '''
+        """
         Grasp the object with the Robotiq gripper.
-        speed: m/s 
+        speed: m/s
         force: N
-        '''
+        """
         normalize_speed = speed / 85
         normalize_speed = np.clip(normalize_speed, 0.0, 1.0) * 255
         normalized_force = force / 235

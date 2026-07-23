@@ -27,10 +27,7 @@ def load_config_file(path: Path) -> dict:
         elif path.suffix.lower() == ".json":
             config = json.load(f)
         else:
-            raise ValueError(
-                f"Unsupported camera config extension: {path.suffix}. "
-                "Use .yaml, .yml, or .json."
-            )
+            raise ValueError(f"Unsupported camera config extension: {path.suffix}. Use .yaml, .yml, or .json.")
 
     if not config:
         raise ValueError(f"Config is empty: {path}")
@@ -50,9 +47,7 @@ def normalize_camera_defaults(camera_entries, path: Path) -> dict:
             if camera is None:
                 camera = {}
             if not isinstance(camera, dict):
-                raise ValueError(
-                    f"Camera defaults for {serial_number} must be a mapping: {path}"
-                )
+                raise ValueError(f"Camera defaults for {serial_number} must be a mapping: {path}")
             camera_overrides[str(serial_number)] = {
                 "serial_number": str(serial_number),
                 **camera,
@@ -63,9 +58,7 @@ def normalize_camera_defaults(camera_entries, path: Path) -> dict:
         if not isinstance(camera, dict):
             raise ValueError(f"Camera config entry {i} must be a mapping: {path}")
         if "serial_number" not in camera:
-            raise ValueError(
-                f"Camera config entry {i} is missing serial_number: {path}"
-            )
+            raise ValueError(f"Camera config entry {i} is missing serial_number: {path}")
         camera_overrides[str(camera["serial_number"])] = camera
 
     return camera_overrides
@@ -76,10 +69,7 @@ def get_camera_defaults(config: dict):
         return config["camera_defaults"]
     if "cameras" in config:
         return config["cameras"]
-    if not any(
-        key in config
-        for key in ("camera_backend", "multi_realsense", "multi_zed", "visualizer")
-    ):
+    if not any(key in config for key in ("camera_backend", "multi_realsense", "multi_zed", "visualizer")):
         return config
     return []
 
@@ -94,10 +84,7 @@ def load_camera_config(
         camera_backend = "zed" if "multi_zed" in config else "realsense"
     camera_backend = str(camera_backend).lower()
     if camera_backend not in {"realsense", "zed"}:
-        raise ValueError(
-            f"Unsupported camera_backend {camera_backend!r} in {path}. "
-            "Use 'realsense' or 'zed'."
-        )
+        raise ValueError(f"Unsupported camera_backend {camera_backend!r} in {path}. Use 'realsense' or 'zed'.")
 
     camera_overrides = {}
     if camera_defaults_path is not None:
@@ -140,15 +127,10 @@ def get_realsense_kwargs(config: CameraConfig, record_fps: int) -> dict:
     }
 
     serial_numbers = settings.get("serial_numbers")
-    use_connected_cameras = settings.get(
-        "use_connected_cameras", serial_numbers is None
-    )
+    use_connected_cameras = settings.get("use_connected_cameras", serial_numbers is None)
     if not use_connected_cameras:
         if not serial_numbers:
-            raise ValueError(
-                "multi_realsense.serial_numbers must be set when "
-                "use_connected_cameras is false."
-            )
+            raise ValueError("multi_realsense.serial_numbers must be set when use_connected_cameras is false.")
         kwargs["serial_numbers"] = [str(serial) for serial in serial_numbers]
     elif serial_numbers:
         kwargs["serial_numbers"] = [str(serial) for serial in serial_numbers]
@@ -175,15 +157,10 @@ def get_zed_kwargs(config: CameraConfig, record_fps: int) -> dict:
     }
 
     serial_numbers = settings.get("serial_numbers")
-    use_connected_cameras = settings.get(
-        "use_connected_cameras", serial_numbers is None
-    )
+    use_connected_cameras = settings.get("use_connected_cameras", serial_numbers is None)
     if not use_connected_cameras:
         if not serial_numbers:
-            raise ValueError(
-                "multi_zed.serial_numbers must be set when "
-                "use_connected_cameras is false."
-            )
+            raise ValueError("multi_zed.serial_numbers must be set when use_connected_cameras is false.")
         kwargs["serial_numbers"] = [int(serial) for serial in serial_numbers]
     elif serial_numbers:
         kwargs["serial_numbers"] = [int(serial) for serial in serial_numbers]
@@ -209,10 +186,7 @@ def get_flip_visual_config(settings: dict, camera_overrides: dict):
 
 
 def apply_camera_overrides(camera_system, config: CameraConfig):
-    cameras_by_serial = {
-        str(serial_number): camera
-        for serial_number, camera in camera_system.cameras.items()
-    }
+    cameras_by_serial = {str(serial_number): camera for serial_number, camera in camera_system.cameras.items()}
     for serial_number, camera in config.camera_overrides.items():
         target = cameras_by_serial.get(str(serial_number))
         if target is None:
@@ -231,16 +205,12 @@ def apply_camera_overrides(camera_system, config: CameraConfig):
 def get_visible_serial_numbers(config: CameraConfig, all_serial_numbers: list):
     visualizer = config.visualizer
     visible_serial_numbers = visualizer.get("visible_serial_numbers")
-    hidden_serial_numbers = set(
-        str(s) for s in visualizer.get("hidden_serial_numbers", [])
-    )
+    hidden_serial_numbers = set(str(s) for s in visualizer.get("hidden_serial_numbers", []))
     serials_by_text = {str(serial): serial for serial in all_serial_numbers}
 
     if visible_serial_numbers is not None:
         requested = [str(serial) for serial in visible_serial_numbers]
-        return [
-            serials_by_text[serial] for serial in requested if serial in serials_by_text
-        ]
+        return [serials_by_text[serial] for serial in requested if serial in serials_by_text]
 
     visible = []
     for serial in all_serial_numbers:
