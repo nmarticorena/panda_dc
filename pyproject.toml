@@ -9,3 +9,13 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 120
+
+[tool.ty.environment]
+python = ".pixi/envs/default/bin/python"
+python-version = "3.11"
+
+[tool.ty.analysis]
+replace-imports-with-any = ["pyrealsense2.**"]
+
+[tool.ty.src]
+include = ["panda_dc"]
