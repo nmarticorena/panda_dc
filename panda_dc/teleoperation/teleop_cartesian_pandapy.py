@@ -109,7 +109,8 @@ class Teleop:
                 gello_q = self.gello.get_joint_state()
                 if isinstance(self.gripper, FrankaGripper):
                     pose = panda_py.fk(gello_q[:7])
-                if isinstance(self.gripper, RobotiqGripper):
+                # if isinstance(self.gripper, RobotiqGripper):
+                else: # Technically if we are not using any gripper this should be the eef
                     pose = self.panda_model.fkine(gello_q[:7], end = "panda_link8").A
                 rot_mat = pose[:3, :3]
                 quat = R.from_matrix(rot_mat).as_quat()
