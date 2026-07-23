@@ -10,7 +10,7 @@ from panda_dc.dynamixel.driver import DynamixelDriver
 np.set_printoptions(precision=2, suppress=True)
 
 robot = panda_py.Panda(os.environ["PANDA_IP"])
-robot.move_to_joint_position([0.0, 0.0, 0.0, -np.pi / 2, 0.0, np.pi / 2, np.pi / 4])
+robot.move_to_joint_position([0.0, 0.0, 0.0, -np.pi / 2, 0.0, np.pi / 2, 0])
 
 serial = inquirer.select(
     message="Select Gello serial port:",
