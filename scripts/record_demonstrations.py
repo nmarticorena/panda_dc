@@ -4,8 +4,11 @@ from panda_dc.realsense.camera_config import (
     apply_camera_overrides,
     get_realsense_kwargs,
     get_visible_serial_numbers,
+    get_zed_kwargs,
     load_camera_config,
 )
+from multiplezed import MultiCameraVisualizer as ZedMultiCameraVisualizer
+from multiplezed import MultiZed
 from panda_dc.teleoperation.teleop_cartesian_pandapy import Teleop
 import json
 import numpy as np
@@ -29,6 +32,7 @@ class Params:
     idx: Optional[int] = None
     data_dir: Path = Path("data")
     camera_config: Path = Path("config/default_cameras.yaml")
+    robot_config: Path = Path("config/robots/default_robot.yaml")
     camera_defaults: Path = Path("config/camera_defaults.yaml")
     record_fps: int = 10
 
@@ -76,11 +80,12 @@ class DataRecorder:
         self.params = params
         self.params.name = get_experiment_name(params.name)
         self.record_fps = params.record_fps
+        self.camera_backend = None
         self.cams = None
         self.gui = None
         self.sensor_socket = None
         self.idx = params.idx if params.idx is not None else self.check_existing_demos()
-        self.t = Teleop(gello_config=select_gello_config())
+        self.t = Teleop(gello_config=select_gello_config(), gripper = "robotiq")
         self.window_name = "Data Recorder"
         self.font = cv2.FONT_HERSHEY_SIMPLEX
         self.demo_state_text = "Resetting..."
@@ -123,7 +128,9 @@ class DataRecorder:
         return last_demo if redo_last_demo else last_demo + 1
 
     def record_state(self, s):
-        self.cams.record_frame()
+        record_frame = getattr(self.cams, "record_frame", None)
+        if record_frame is not None:
+            record_frame()
         state = {"gripper_action": self.gripper_action, **s}
         self.states.append(state)
 
@@ -139,10 +146,18 @@ class DataRecorder:
             self.params.camera_config,
             camera_defaults_path=self.params.camera_defaults,
         )
-        realsense_kwargs = get_realsense_kwargs(camera_config, self.record_fps)
-        self.record_fps = realsense_kwargs["record_fps"]
+        self.camera_backend = camera_config.camera_backend
+        if self.camera_backend == "zed":
+            camera_kwargs = get_zed_kwargs(camera_config, self.record_fps)
+            camera_class = MultiZed
+            visualizer_class = ZedMultiCameraVisualizer
+        else:
+            camera_kwargs = get_realsense_kwargs(camera_config, self.record_fps)
+            camera_class = MultiRealsense
+            visualizer_class = MultiCameraVisualizer
 
-        self.cams = MultiRealsense(**realsense_kwargs)
+        self.record_fps = camera_kwargs["record_fps"]
+        self.cams = camera_class(**camera_kwargs)
         apply_camera_overrides(self.cams, camera_config)
         self.cams.start()
         self.setup_streams()
@@ -151,9 +166,9 @@ class DataRecorder:
         visible_serial_numbers = get_visible_serial_numbers(
             camera_config, self.cams.serial_numbers
         )
-        self.gui = MultiCameraVisualizer(
+        self.gui = visualizer_class(
             self.cams,
-            visualizer_config.get("rows", 3),
+            visualizer_config.get("rows", 2),
             visualizer_config.get("cols", 2),
             visible_serial_numbers=visible_serial_numbers,
         )
@@ -163,10 +178,12 @@ class DataRecorder:
         print(x)
         if x == "open":
             self.gripper_action = 0.0
-            self.t.gripper.grasp(1.0, 0.1, 60)
+            # self.t.gripper.grasp(1.0, 0.1, 60)
+            self.t.gripper.open()
         else:
             self.gripper_action = 1.0
-            self.t.gripper.grasp(0.0, 0.1, 60)
+            # self.t.gripper.grasp(0.0, 0.1, 60)
+            self.t.gripper.close()
 
     def toggle_record(self, discard=False):
         self.record_data = not self.record_data
@@ -190,6 +207,11 @@ class DataRecorder:
             if self.disposable:
                 self.disposable.dispose()
                 self.cams.stop_recording()
+                wait_for_recording = getattr(
+                    self.cams, "wait_for_recording_to_stop", None
+                )
+                if wait_for_recording is not None:
+                    wait_for_recording()
 
                 if not discard:
                     episode_path = (
@@ -260,6 +282,8 @@ class DataRecorder:
                 break
 
     def stop(self):
+        if self.gui is not None:
+            self.gui.stop(wait=True)
         if self.cams is not None:
             self.cams.stop(wait=True)
         self.t.relinquish()
