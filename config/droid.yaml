@@ -1,0 +1,34 @@
+camera_backend: zed
+
+multi_zed:
+  # true means MultiZed will initialize every connected ZED camera.
+  # Set use_connected_cameras: false and fill serial_numbers to restrict/order cameras.
+  use_connected_cameras: false
+  serial_numbers: [17892237, 39636327]
+  record_fps: 10
+  capture_fps: 10
+  resolution: [1280, 720]
+  enable_color: true
+  enable_depth: true
+  record_depth: true
+  depth_mode: NEURAL
+
+visualizer:
+  rows: 2
+  cols: 2
+  # Cameras hidden here are still initialized and recorded.
+  hidden_serial_numbers: []
+  # Optional allowlist. If set, only these cameras are displayed.
+  # visible_serial_numbers: [17892237, 39636327]
+
+camera_defaults:
+  - serial_number: 17892237
+    show: true
+    # ZED exposure and gain are percentages in the range 0-100.
+    # exposure: 40
+    # gain: 20
+    # flip_visual: true
+  - serial_number: 39636327
+    show: true
+    # exposure: 40
+    # gain: 20
