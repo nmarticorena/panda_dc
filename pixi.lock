@@ -67,6 +67,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cuda-sanitizer-api-12.8.93-hbd13f7d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cuda-tools-12.8.2-ha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cuda-visual-tools-12.8.2-ha770c72_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/curl-8.18.0-h4e3cde8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cxx-compiler-1.11.0-hfcd1e18_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cyrus-sasl-2.1.28-hd9c7081_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/dav1d-1.2.1-hd590300_0.conda
@@ -477,7 +478,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/wheel-0.47.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
-      - pypi: ../zed
       - pypi: ./
       - pypi: ./pyzed-5.0-cp311-cp311-linux_x86_64.whl
       - pypi: git+https://github.com/allenai/ai2_robot_infra.git#6119a80cdfde36133b255d1efe383541aeb409d8
@@ -488,6 +488,7 @@ environments:
       - pypi: git+https://github.com/nmarticorena/spatialgeometry.git#1a25c5cfbd36702bdf495068039fb6ab780d911e
       - pypi: git+https://github.com/nmarticorena/spatialmath-python.git#e18684da6fe4a76625aef65d38f107ee451d037a
       - pypi: git+https://github.com/nmarticorena/swift.git#0a8900c01736db66cc5457eaef50495b776e54ff
+      - pypi: git+https://github.com/nmarticorena/zed.git#1716c137128d3616f58a130c3f742ddf89b9b608
       - pypi: git+https://github.com/python-hyper/wsproto.git#5e0685d0740ec30716897442f336de1118f5f40a
       - pypi: https://files.pythonhosted.org/packages/03/8d/671d81534ea0e2b0e8a121be100020da09eb78861fe3aa8f3ef7dcd3bed1/msgpack-1.2.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl
@@ -595,6 +596,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cuda-sanitizer-api-12.8.93-hbd13f7d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cuda-tools-12.8.2-ha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cuda-visual-tools-12.8.2-ha770c72_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/curl-8.18.0-h4e3cde8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cxx-compiler-1.11.0-hfcd1e18_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cyrus-sasl-2.1.28-hd9c7081_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/dav1d-1.2.1-hd590300_0.conda
@@ -1005,7 +1007,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/wheel-0.47.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.15-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-4.1.0-pyhcf101f3_0.conda
-      - pypi: ../zed
       - pypi: ./
       - pypi: ./pyzed-5.0-cp311-cp311-linux_x86_64.whl
       - pypi: git+https://github.com/allenai/ai2_robot_infra.git#6119a80cdfde36133b255d1efe383541aeb409d8
@@ -1016,6 +1017,7 @@ environments:
       - pypi: git+https://github.com/nmarticorena/spatialgeometry.git#1a25c5cfbd36702bdf495068039fb6ab780d911e
       - pypi: git+https://github.com/nmarticorena/spatialmath-python.git#e18684da6fe4a76625aef65d38f107ee451d037a
       - pypi: git+https://github.com/nmarticorena/swift.git#0a8900c01736db66cc5457eaef50495b776e54ff
+      - pypi: git+https://github.com/nmarticorena/zed.git#1716c137128d3616f58a130c3f742ddf89b9b608
       - pypi: git+https://github.com/python-hyper/wsproto.git#5e0685d0740ec30716897442f336de1118f5f40a
       - pypi: https://files.pythonhosted.org/packages/03/8d/671d81534ea0e2b0e8a121be100020da09eb78861fe3aa8f3ef7dcd3bed1/msgpack-1.2.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl
@@ -1827,6 +1829,24 @@ packages:
   run_exports: {}
   size: 20831
   timestamp: 1776869951933
+- conda: https://conda.anaconda.org/conda-forge/linux-64/curl-8.18.0-h4e3cde8_0.conda
+  sha256: f6f74fcb3a5a5239d8b876e9193df04dfcb1c5866e172797da657fdee9282b84
+  md5: 261410cab40c7142adce3a09e24cae41
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - krb5 >=1.21.3,<1.22.0a0
+  - libcurl 8.18.0 h4e3cde8_0
+  - libgcc >=14
+  - libssh2 >=1.11.1,<2.0a0
+  - libzlib >=1.3.1,<2.0a0
+  - openssl >=3.5.4,<4.0a0
+  - zstd >=1.5.7,<1.6.0a0
+  license: curl
+  license_family: MIT
+  purls: []
+  run_exports: {}
+  size: 190096
+  timestamp: 1767821756587
 - conda: https://conda.anaconda.org/conda-forge/linux-64/cxx-compiler-1.11.0-hfcd1e18_0.conda
   sha256: 3fcc97ae3e89c150401a50a4de58794ffc67b1ed0e1851468fcc376980201e25
   md5: 5da8c935dca9186673987f79cef0b2a5
@@ -7521,13 +7541,6 @@ packages:
   - pkg:pypi/zipp?source=compressed-mapping
   size: 24190
   timestamp: 1779159948016
-- pypi: ../zed
-  name: multiplezed
-  requires_dist:
-  - numpy
-  - threadpoolctl
-  - shared-memory @ git+https://github.com/jc211/shared_memory
-  requires_python: '>=3.10,<3.12'
 - pypi: ./
   name: panda-dc
 - pypi: ./pyzed-5.0-cp311-cp311-linux_x86_64.whl
@@ -7678,6 +7691,14 @@ packages:
   - ipython ; extra == 'nb'
   - notebook ; extra == 'nb'
   requires_python: '>=3.7'
+- pypi: git+https://github.com/nmarticorena/zed.git#1716c137128d3616f58a130c3f742ddf89b9b608
+  name: multiplezed
+  version: 1.0.2
+  requires_dist:
+  - numpy
+  - threadpoolctl
+  - shared-memory @ git+https://github.com/jc211/shared_memory
+  requires_python: '>=3.10,<3.12'
 - pypi: git+https://github.com/python-hyper/wsproto.git#5e0685d0740ec30716897442f336de1118f5f40a
   name: wsproto
   version: 1.3.2
