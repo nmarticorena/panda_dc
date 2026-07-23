@@ -6,6 +6,7 @@ from reactivex import scheduler
 from reactivex import operators as ops
 from scipy.spatial.transform.rotation import Rotation as R
 import pyrobotiqgripper as robotiq
+import roboticstoolbox as rtb
 
 import panda_py
 from panda_dc.dynamixel.robot import DynamixelRobot
@@ -93,6 +94,7 @@ class Teleop:
             filter_coeff=0.9,
         )
         self.panda.enable_logging(1)
+        self.panda_model = rtb.models.Panda()
 
 
         self.panda.start_controller(self.ctrl)
@@ -105,7 +107,10 @@ class Teleop:
                     self.home_requested = False
 
                 gello_q = self.gello.get_joint_state()
-                pose = panda_py.fk(gello_q[:7])
+                if isinstance(self.gripper, FrankaGripper):
+                    pose = panda_py.fk(gello_q[:7])
+                if isinstance(self.gripper, RobotiqGripper):
+                    pose = self.panda_model.fkine(gello_q[:7], end = "panda_link8").A
                 rot_mat = pose[:3, :3]
                 quat = R.from_matrix(rot_mat).as_quat()
                 self.ctrl.set_control(pose[:3, 3], quat)
