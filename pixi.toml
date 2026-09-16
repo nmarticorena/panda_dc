@@ -63,6 +63,7 @@ ai2_robot_infra = {git = "https://github.com/allenai/ai2_robot_infra.git", extra
 
 [activation.env]
 PANDA_IP = "172.16.0.2"
+LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:$CONDA_PREFIX/lib"
 
 [feature.dev.dependencies]
 ruff = "*"
