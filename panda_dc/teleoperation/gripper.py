@@ -73,7 +73,7 @@ class NoneGripper(Gripper):
 
 class RobotiqGripper(Gripper):
     def __init__(self):
-        self._gripper = robotiq.RobotiqGripper("/dev/ttyUSB0")  # Todo make a udevrule
+        self._gripper = robotiq.RobotiqGripper("/dev/serial/by-id/usb-FTDI_USB_TO_RS-485_DABD0VCA-if00-port0")  # Todo make a udevrule
         if not self._gripper.isActivated():
             print("Activating Robotiq gripper...")
             self._gripper.activate()
